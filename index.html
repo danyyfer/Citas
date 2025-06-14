@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>App de Citas Simple</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    margin: 20px 0;
+  }
+  #card {
+    width: 300px;
+    height: 400px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #card.fade-out {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  #profile-img {
+    width: 100%;
+    height: 70%;
+    object-fit: cover;
+    display: block;
+  }
+  #name {
+    font-size: 1.5em;
+    margin: 10px 0 0;
+  }
+  #actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+  }
+  #likeBtn {
+    background-color: #4CAF50;
+    color: white;
+  }
+  #dislikeBtn {
+    background-color: #f44336;
+    color: white;
+  }
+  #matchMessage {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #333;
+  }
+  #restartBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 30px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>App de Citas</h1>
+
+<div id="card">
+  <img id="profile-img" src="" alt="Perfil" />
+  <div id="name"></div>
+</div>
+
+<div id="actions">
+  <button id="dislikeBtn">No Me Gusta</button>
+  <button id="likeBtn">Me Gusta</button>
+</div>
+
+<div id="matchMessage"></div>
+<button id="restartBtn">Reiniciar Perfiles</button>
+
+<script>
+  const profiles = [
+    { name: "Ana", image: "https://randomuser.me/api/portraits/women/44.jpg", likedByMe: false, likedByOther: false },
+    { name: "Carlos", image: "https://randomuser.me/api/portraits/men/52.jpg", likedByMe: false, likedByOther: false },
+    { name: "Lucía", image: "https://randomuser.me/api/portraits/women/68.jpg", likedByMe: false, likedByOther: false },
+    { name: "Javier", image: "https://randomuser.me/api/portraits/men/34.jpg", likedByMe: false, likedByOther: false },
+  ];
+
+  let currentIndex = 0;
+
+  const profileImg = document.getElementById('profile-img');
+  const nameDiv = document.getElementById('name');
+  const matchMessage = document.getElementById('matchMessage');
+  const likeBtn = document.getElementById('likeBtn');
+  const dislikeBtn = document.getElementById('dislikeBtn');
+  const actionsDiv = document.getElementById('actions');
+  const restartBtn = document.getElementById('restartBtn');
+  const card = document.getElementById('card');
+
+  function showProfile(index) {
+    if (index >= profiles.length) {
+      profileImg.style.display = 'none';
+      nameDiv.innerText = "No hay más perfiles.";
+      actionsDiv.style.display = 'none';
+      restartBtn.style.display = 'block';
+      return;
+    }
+
+    const profile = profiles[index];
+    profileImg.style.display = 'block';
+    profileImg.src = profile.image;
+    profileImg.alt = `Foto de perfil de ${profile.name}`;
+    nameDiv.innerText = profile.name;
+    matchMessage.innerText = "";
+  }
+
+  function handleLike() {
+    const profile = profiles[currentIndex];
+    profile.likedByMe = true;
+    if (Math.random() < 0.5) {
+      profile.likedByOther = true;
+    }
+    checkMatch(profile);
+    nextProfile();
+  }
+
+  function handleDislike() {
+    nextProfile();
+  }
+
+  function checkMatch(profile) {
+    if (profile.likedByMe && profile.likedByOther) {
+      matchMessage.innerText = `¡Has hecho match con ${profile.name}! 💖`;
+    }
+  }
+
+  function nextProfile() {
+    card.classList.add('fade-out');
+    setTimeout(() => {
+      currentIndex++;
+      card.classList.remove('fade-out');
+      showProfile(currentIndex);
+    }, 300);
+  }
+
+  likeBtn.addEventListener('click', handleLike);
+  dislikeBtn.addEventListener('click', handleDislike);
+
+  restartBtn.addEventListener('click', () => {
+    currentIndex = 0;
+    restartBtn.style.display = 'none';
+    actionsDiv.style.display = 'flex';
+    showProfile(currentIndex);
+  });
+
+  showProfile(currentIndex);
+</script>
+
+</body>
+</html>
