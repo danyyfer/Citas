@@ -13,15 +13,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: start;
-      height: 100vh;
-      margin: 0;
       padding: 20px;
     }
-    h1 {
-      margin-bottom: 10px;
-    }
-    form, #card {
+    form, #card, #chatBox {
       width: 100%;
       max-width: 300px;
       background: #fff;
@@ -53,10 +47,22 @@
       margin-top: 10px;
       color: green;
     }
+    #chatBox {
+      display: none;
+    }
+    #chatMessages {
+      height: 150px;
+      overflow-y: auto;
+      background: #eef;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>App de Citas Emocionales</h1>
+
   <form id="registerForm">
     <input type="text" id="nameInput" placeholder="Tu nombre" required />
     <input type="url" id="imageInput" placeholder="URL de tu foto (opcional)" />
@@ -75,6 +81,7 @@
     <img id="profile-img" src="" alt="Perfil" />
     <div id="name"></div>
     <div id="estado"></div>
+    <div id="ubicacion"></div>
     <div id="actions">
       <button id="dislikeBtn">No Me Gusta</button>
       <button id="likeBtn">Me Gusta</button>
@@ -82,7 +89,18 @@
     <div id="matchMessage"></div>
   </div>
 
+  <div id="chatBox">
+    <h3>Chat con tu Match</h3>
+    <div id="chatMessages"></div>
+    <input type="text" id="chatInput" placeholder="Escribe tu mensaje" />
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+
   <script>
+    const firebaseConfig = {
+      // Tu configuración real aquí, respetada
+    };
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const registerForm = document.getElementById('registerForm');
@@ -90,24 +108,40 @@
     const nameDiv = document.getElementById('name');
     const estadoDiv = document.getElementById('estado');
     const profileImg = document.getElementById('profile-img');
+    const ubicacionDiv = document.getElementById('ubicacion');
     const matchMessage = document.getElementById('matchMessage');
     const likeBtn = document.getElementById('likeBtn');
     const dislikeBtn = document.getElementById('dislikeBtn');
+    const chatBox = document.getElementById('chatBox');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
 
     let profiles = [];
     let currentIndex = 0;
+    let currentUserId = null;
+    let currentMatchId = null;
 
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('nameInput').value;
-      let image = document.getElementById('imageInput').value;
+      const image = document.getElementById('imageInput').value || 'https://randomuser.me/api/portraits/lego/1.jpg';
       const estado = document.getElementById('estadoEmocional').value;
 
-      if (!image) {
-        image = "https://randomuser.me/api/portraits/lego/1.jpg"; // imagen por defecto
+      // Intentar obtener ubicación automática
+      let ubicacion = 'Monterrey';
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {},
+          err => {},
+          { timeout: 5000 }
+        );
       }
 
-      await db.collection('users').add({ name, image, estado, likedBy: [] });
+      const userRef = await db.collection('users').add({
+        name, image, estado, ubicacion, likedBy: []
+      });
+
+      currentUserId = userRef.id;
       alert('¡Registrado! Ahora puedes ver a otros.');
       registerForm.style.display = 'none';
       loadProfiles();
@@ -115,7 +149,9 @@
 
     async function loadProfiles() {
       const snapshot = await db.collection('users').get();
-      profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      profiles = snapshot.docs
+        .filter(doc => doc.id !== currentUserId)
+        .map(doc => ({ id: doc.id, ...doc.data() }));
       currentIndex = 0;
       showProfile(currentIndex);
     }
@@ -130,14 +166,24 @@
       profileImg.src = profile.image;
       nameDiv.textContent = profile.name;
       estadoDiv.textContent = `Estado: ${profile.estado}`;
+      ubicacionDiv.textContent = `Ubicación: ${profile.ubicacion}`;
       card.style.display = 'block';
       matchMessage.textContent = '';
     }
 
-    likeBtn.addEventListener('click', () => {
+    likeBtn.addEventListener('click', async () => {
       const profile = profiles[currentIndex];
-      if (Math.random() < 0.5) {
+      const profileRef = db.collection('users').doc(profile.id);
+      await profileRef.update({
+        likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+      });
+      const matchSnapshot = await profileRef.get();
+      const likedBy = matchSnapshot.data().likedBy || [];
+      if (likedBy.includes(currentUserId)) {
         matchMessage.textContent = `¡Has hecho match con ${profile.name}!`;
+        currentMatchId = profile.id;
+        chatBox.style.display = 'block';
+        loadMessages();
       }
       currentIndex++;
       showProfile(currentIndex);
@@ -147,6 +193,37 @@
       currentIndex++;
       showProfile(currentIndex);
     });
+
+    async function loadMessages() {
+      db.collection('chats')
+        .doc(currentUserId + '_' + currentMatchId)
+        .collection('messages')
+        .orderBy('timestamp')
+        .onSnapshot(snapshot => {
+          chatMessages.innerHTML = '';
+          snapshot.forEach(doc => {
+            const msg = doc.data();
+            const div = document.createElement('div');
+            div.textContent = `${msg.sender === currentUserId ? 'Tú' : 'Ell@'}: ${msg.text}`;
+            chatMessages.appendChild(div);
+          });
+        });
+    }
+
+    async function sendMessage() {
+      const text = chatInput.value;
+      if (!text.trim()) return;
+      const chatId = currentUserId + '_' + currentMatchId;
+      await db.collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add({
+          sender: currentUserId,
+          text,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      chatInput.value = '';
+    }
   </script>
 </body>
 </html>
