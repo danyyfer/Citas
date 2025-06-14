@@ -2,140 +2,172 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tu Perfil Emocional</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App de Citas Empática</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       background: #eef2f7;
-      color: #333;
-      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: start;
+      height: 100vh;
+      margin: 0;
+      padding-top: 20px;
     }
-
     h1 {
-      text-align: center;
       margin-bottom: 10px;
     }
-
-    form {
+    #card {
+      width: 320px;
       background: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      align-items: center;
+      padding-bottom: 20px;
+      transition: all 0.3s ease;
     }
-
-    label {
+    #profile-img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+    }
+    #name {
+      font-size: 1.4em;
+      margin: 10px 0 5px;
       font-weight: bold;
     }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+    #emotion, #lookingFor {
+      margin: 5px 20px;
       font-size: 1em;
-      resize: none;
+      text-align: center;
+      color: #444;
     }
-
+    #actions {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-top: 15px;
+    }
     button {
-      padding: 12px;
-      background-color: #4CAF50;
-      color: white;
+      padding: 10px 18px;
       border: none;
+      border-radius: 50px;
       font-size: 1em;
-      border-radius: 10px;
       cursor: pointer;
     }
-
-    button:hover {
-      background-color: #45a049;
+    #connectBtn {
+      background-color: #4CAF50;
+      color: white;
     }
-
-    .message {
-      margin-top: 10px;
-      color: #4CAF50;
-      font-weight: bold;
-      text-align: center;
+    #respectBtn {
+      background-color: #f44336;
+      color: white;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1.1em;
+      color: #333;
     }
   </style>
 </head>
 <body>
 
-<h1>Tu Perfil Emocional</h1>
+  <h1>Conecta con Empatía</h1>
+  <div id="card">
+    <img id="profile-img" src="" alt="Perfil" />
+    <div id="name"></div>
+    <div id="emotion"></div>
+    <div id="lookingFor"></div>
+  </div>
+  <div id="actions">
+    <button id="respectBtn">Respetar su espacio</button>
+    <button id="connectBtn">Conectar con cuidado</button>
+  </div>
+  <div id="message"></div>
 
-<form id="emotionalProfileForm">
-  <label for="name">Tu nombre:</label>
-  <input type="text" id="name" required placeholder="Ej. Sofía, Luis, Alex" />
+  <script>
+    const profiles = [
+      {
+        name: "Ana",
+        image: "https://randomuser.me/api/portraits/women/44.jpg",
+        emotion: "Se siente con ansiedad, busca una charla suave.",
+        lookingFor: "Conexión emocional sin presión.",
+      },
+      {
+        name: "Carlos",
+        image: "https://randomuser.me/api/portraits/men/52.jpg",
+        emotion: "Está atravesando un duelo, prefiere alguien que escuche.",
+        lookingFor: "Comprensión y compañía.",
+      },
+      {
+        name: "Lucía",
+        image: "https://randomuser.me/api/portraits/women/68.jpg",
+        emotion: "Tiene autismo, busca conexiones honestas y claras.",
+        lookingFor: "Respeto, estructura y sinceridad.",
+      },
+      {
+        name: "Javier",
+        image: "https://randomuser.me/api/portraits/men/34.jpg",
+        emotion: "Día difícil por depresión, pero desea hablar.",
+        lookingFor: "Apoyo suave y sin juicios.",
+      }
+    ];
 
-  <label for="image">URL de tu foto (opcional):</label>
-  <input type="url" id="image" placeholder="https://..." />
+    let currentIndex = 0;
 
-  <label for="emotion">¿Cómo te sientes hoy?</label>
-  <select id="emotion" required>
-    <option value="">Selecciona una opción</option>
-    <option value="Ansioso/a">Ansioso/a</option>
-    <option value="Triste">Triste</option>
-    <option value="Calmado/a">Calmado/a</option>
-    <option value="Esperanzado/a">Esperanzado/a</option>
-    <option value="En duelo">En duelo</option>
-  </select>
+    const profileImg = document.getElementById('profile-img');
+    const nameDiv = document.getElementById('name');
+    const emotionDiv = document.getElementById('emotion');
+    const lookingForDiv = document.getElementById('lookingFor');
+    const messageDiv = document.getElementById('message');
+    const connectBtn = document.getElementById('connectBtn');
+    const respectBtn = document.getElementById('respectBtn');
 
-  <label for="lookingFor">¿Qué estás buscando?</label>
-  <select id="lookingFor" required>
-    <option value="">Selecciona una opción</option>
-    <option value="Escucha y comprensión">Escucha y comprensión</option>
-    <option value="Acompañamiento emocional">Acompañamiento emocional</option>
-    <option value="Conversaciones suaves">Conversaciones suaves</option>
-    <option value="Conexión sincera">Conexión sincera</option>
-    <option value="Relación a largo plazo">Relación a largo plazo</option>
-  </select>
+    function showProfile(index) {
+      if (index >= profiles.length) {
+        profileImg.src = "";
+        nameDiv.innerText = "No hay más perfiles.";
+        emotionDiv.innerText = "";
+        lookingForDiv.innerText = "";
+        document.getElementById('actions').style.display = 'none';
+        return;
+      }
+      const profile = profiles[index];
+      profileImg.src = profile.image;
+      nameDiv.innerText = profile.name;
+      emotionDiv.innerText = profile.emotion;
+      lookingForDiv.innerText = profile.lookingFor;
+      messageDiv.innerText = "";
+    }
 
-  <label for="openness">¿Cómo te sientes para conectar?</label>
-  <select id="openness" required>
-    <option value="">Selecciona una opción</option>
-    <option value="Solo quiero que me escuchen">Solo quiero que me escuchen</option>
-    <option value="Estoy abierto/a a conocer personas">Estoy abierto/a a conocer personas</option>
-    <option value="Quiero hablar con alguien pero con calma">Quiero hablar con alguien pero con calma</option>
-  </select>
+    function handleConnect() {
+      const profile = profiles[currentIndex];
+      messageDiv.innerText = `Has elegido conectar con ${profile.name} con cuidado ❤️`;
+      nextProfile();
+    }
 
-  <label for="bio">Un mensaje desde tu corazón (opcional):</label>
-  <textarea id="bio" rows="3" placeholder="Ej. Hoy no tengo muchas palabras, pero tengo ganas de ser escuchado/a."></textarea>
+    function handleRespect() {
+      const profile = profiles[currentIndex];
+      messageDiv.innerText = `Has respetado el espacio de ${profile.name}.`;
+      nextProfile();
+    }
 
-  <button type="submit">Guardar Perfil</button>
-  <div class="message" id="confirmationMessage"></div>
-</form>
+    function nextProfile() {
+      setTimeout(() => {
+        currentIndex++;
+        showProfile(currentIndex);
+      }, 1500);
+    }
 
-<script>
-  const form = document.getElementById('emotionalProfileForm');
-  const message = document.getElementById('confirmationMessage');
+    connectBtn.addEventListener('click', handleConnect);
+    respectBtn.addEventListener('click', handleRespect);
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const profile = {
-      name: document.getElementById('name').value.trim(),
-      image: document.getElementById('image').value.trim(),
-      emotion: document.getElementById('emotion').value,
-      lookingFor: document.getElementById('lookingFor').value,
-      openness: document.getElementById('openness').value,
-      bio: document.getElementById('bio').value.trim()
-    };
-
-    // Aquí puedes guardar el perfil en localStorage, backend o integrarlo al flujo de tu app
-    console.log("Perfil guardado:", profile);
-
-    message.textContent = "💚 Perfil emocional guardado con éxito.";
-    form.reset();
-  });
-</script>
-
+    showProfile(currentIndex);
+  </script>
 </body>
 </html>
