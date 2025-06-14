@@ -1,210 +1,108 @@
-<!DOCTYPE html><html lang="es">
+
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App de Citas Emocionales</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Conecta Emocional</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f4f8;
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      justify-content: start;
       height: 100vh;
       margin: 0;
-      padding: 20px;
     }
-    h1 {
-      margin-bottom: 10px;
-    }
-    form, #card {
-      width: 100%;
-      max-width: 300px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      margin-top: 10px;
+    .contenedor {
+      background-color: white;
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      width: 400px;
+      max-width: 90%;
+      text-align: center;
     }
     input, select, button {
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 1em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    #profile-img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
       border-radius: 10px;
-    }
-    #actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-    #matchMessage {
-      margin-top: 10px;
-      color: green;
-    }
-    #chatBox {
-      margin-top: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      display: none;
     }
-    #chatMessages {
-      max-height: 150px;
-      overflow-y: auto;
-      margin-bottom: 10px;
+    button {
+      background-color: #ff6b6b;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #ff4757;
     }
   </style>
 </head>
 <body>
-  <h1>App de Citas Emocionales</h1>
-  <form id="registerForm">
-    <input type="text" id="nameInput" placeholder="Tu nombre" required />
-    <input type="url" id="imageInput" placeholder="URL de tu foto (opcional)" />
-    <select id="estadoEmocional" required>
-      <option value="">¿Cómo te sientes hoy?</option>
-      <option value="ansiedad">Ansiedad</option>
-      <option value="depresión">Depresión</option>
-      <option value="bipolaridad">Bipolaridad</option>
-      <option value="autismo">Autismo</option>
-      <option value="duelo">En duelo</option>
+  <div class="contenedor">
+    <h2>Regístrate</h2>
+    <input type="text" id="nombre" placeholder="Tu nombre" />
+    <input type="text" id="foto" placeholder="URL de tu foto (opcional)" />
+    <select id="emocion">
+      <option disabled selected>¿Cómo te sientes?</option>
+      <option>Ansiedad</option>
+      <option>Depresión</option>
+      <option>Bipolaridad</option>
+      <option>Autismo</option>
+      <option>En duelo</option>
     </select>
-    <input type="text" id="ubicacionInput" placeholder="Tu ciudad (ej. Monterrey)" required />
-    <button type="submit">Registrar</button>
-  </form>  <div id="card" style="display:none">
-    <img id="profile-img" src="" alt="Perfil" />
-    <div id="name"></div>
-    <div id="estado"></div>
-    <div id="ubicacion"></div>
-    <div id="actions">
-      <button id="dislikeBtn">No Me Gusta</button>
-      <button id="likeBtn">Me Gusta</button>
-    </div>
-    <div id="matchMessage"></div>
-    <div id="chatBox">
-      <div id="chatMessages"></div>
-      <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
-      <button id="sendChat">Enviar</button>
-    </div>
-  </div>  <script>
-    // Import the functions you need from the SDKs you need
+    <input type="text" id="ubicacion" placeholder="Ubicación (Ej. Monterrey)" />
+    <button onclick="registrar()">Registrar</button>
+  </div>
 
-import { initializeApp } from "firebase/app";
+  <script type="module">
+    // Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-// TODO: Add SDKs for Firebase products that you want to use
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_AUTH_DOMAIN",
+      databaseURL: "TU_DATABASE_URL",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_STORAGE_BUCKET",
+      messagingSenderId: "TU_MESSAGING_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
 
-// https://firebase.google.com/docs/web/setup#available-libraries
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-// Your web app's Firebase configuration
+    function registrar() {
+      const nombre = document.getElementById('nombre').value.trim();
+      const foto = document.getElementById('foto').value.trim() || "https://randomuser.me/api/portraits/lego/1.jpg";
+      const emocion = document.getElementById('emocion').value;
+      const ubicacion = document.getElementById('ubicacion').value.trim();
 
-const firebaseConfig = {
-apiKey: "AIzaSyAbG23yHTMTfkJM5WJEwB5iRz-4hUlJeVU",
-authDomain: "cita-611d4.firebaseapp.com",
-projectId: "cita-611d4",
-storageBucket: "cita-611d4.firebasestorage.app",
-messagingSenderId: "1066363757727",
-appId: "1:1066363757727:web:fc1e268afc491c29756eaa"
-
-};
-// Initialize Firebase
-
-const app = initializeApp(firebaseConfig);
-const registerForm = document.getElementById('registerForm');
-    const card = document.getElementById('card');
-    const nameDiv = document.getElementById('name');
-    const estadoDiv = document.getElementById('estado');
-    const ubicacionDiv = document.getElementById('ubicacion');
-    const profileImg = document.getElementById('profile-img');
-    const matchMessage = document.getElementById('matchMessage');
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    const chatBox = document.getElementById('chatBox');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendChat = document.getElementById('sendChat');
-
-    let profiles = [];
-    let currentIndex = 0;
-    let currentUserId = null;
-    let currentProfile = null;
-
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('nameInput').value;
-      const image = document.getElementById('imageInput').value || 'https://via.placeholder.com/300';
-      const estado = document.getElementById('estadoEmocional').value;
-      const ubicacion = document.getElementById('ubicacionInput').value;
-
-      const userRef = await db.collection('users').add({ name, image, estado, ubicacion, likedBy: [] });
-      currentUserId = userRef.id;
-      alert('¡Registrado! Ahora puedes ver a otros.');
-      registerForm.style.display = 'none';
-      loadProfiles();
-    });
-
-    async function loadProfiles() {
-      const snapshot = await db.collection('users').get();
-      profiles = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(p => p.id !== currentUserId);
-      currentIndex = 0;
-      showProfile(currentIndex);
-    }
-
-    function showProfile(index) {
-      if (index >= profiles.length) {
-        card.style.display = 'none';
-        alert('No hay más perfiles por hoy.');
+      if (!nombre || !emocion || !ubicacion) {
+        alert("Por favor, completa todos los campos obligatorios.");
         return;
       }
-      currentProfile = profiles[index];
-      profileImg.src = currentProfile.image;
-      nameDiv.textContent = currentProfile.name;
-      estadoDiv.textContent = `Estado: ${currentProfile.estado}`;
-      ubicacionDiv.textContent = `Ubicación: ${currentProfile.ubicacion}`;
-      card.style.display = 'block';
-      matchMessage.textContent = '';
-      chatBox.style.display = 'none';
+
+      const usuarioId = nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+      set(ref(db, 'usuarios/' + usuarioId), {
+        nombre,
+        foto,
+        emocion,
+        ubicacion
+      }).then(() => {
+        alert("¡Registrado con éxito!");
+      }).catch((error) => {
+        alert("Error al registrar: " + error.message);
+      });
     }
-
-    likeBtn.addEventListener('click', async () => {
-      const likedUserRef = db.collection('users').doc(currentProfile.id);
-      await likedUserRef.update({ likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId) });
-
-      const likedUserDoc = await likedUserRef.get();
-      const likedByArray = likedUserDoc.data().likedBy || [];
-
-      if (likedByArray.includes(currentUserId)) {
-        matchMessage.textContent = `¡Has hecho match con ${currentProfile.name}!`;
-        chatBox.style.display = 'block';
-      }
-      currentIndex++;
-      setTimeout(() => showProfile(currentIndex), 1000);
-    });
-
-    dislikeBtn.addEventListener('click', () => {
-      currentIndex++;
-      showProfile(currentIndex);
-    });
-
-    sendChat.addEventListener('click', () => {
-      const msg = chatInput.value.trim();
-      if (msg) {
-        const p = document.createElement('p');
-        p.textContent = `Tú: ${msg}`;
-        chatMessages.appendChild(p);
-        chatInput.value = '';
-      }
-    });
-  </script></body>
+  </script>
+</body>
 </html>
