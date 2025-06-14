@@ -1,8 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>App de Citas Emocionales</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
@@ -13,9 +12,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: start;
+      height: 100vh;
+      margin: 0;
       padding: 20px;
     }
-    form, #card, #chatBox {
+    h1 {
+      margin-bottom: 10px;
+    }
+    form, #card {
       width: 100%;
       max-width: 300px;
       background: #fff;
@@ -48,21 +53,21 @@
       color: green;
     }
     #chatBox {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
       display: none;
     }
     #chatMessages {
-      height: 150px;
+      max-height: 150px;
       overflow-y: auto;
-      background: #eef;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 10px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>App de Citas Emocionales</h1>
-
   <form id="registerForm">
     <input type="text" id="nameInput" placeholder="Tu nombre" required />
     <input type="url" id="imageInput" placeholder="URL de tu foto (opcional)" />
@@ -74,10 +79,9 @@
       <option value="autismo">Autismo</option>
       <option value="duelo">En duelo</option>
     </select>
+    <input type="text" id="ubicacionInput" placeholder="Tu ciudad (ej. Monterrey)" required />
     <button type="submit">Registrar</button>
-  </form>
-
-  <div id="card" style="display:none">
+  </form>  <div id="card" style="display:none">
     <img id="profile-img" src="" alt="Perfil" />
     <div id="name"></div>
     <div id="estado"></div>
@@ -87,18 +91,20 @@
       <button id="likeBtn">Me Gusta</button>
     </div>
     <div id="matchMessage"></div>
-  </div>
-
-  <div id="chatBox">
-    <h3>Chat con tu Match</h3>
-    <div id="chatMessages"></div>
-    <input type="text" id="chatInput" placeholder="Escribe tu mensaje" />
-    <button onclick="sendMessage()">Enviar</button>
-  </div>
-
-  <script>
+    <div id="chatBox">
+      <div id="chatMessages"></div>
+      <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
+      <button id="sendChat">Enviar</button>
+    </div>
+  </div>  <script>
     const firebaseConfig = {
-      // Tu configuración real aquí, respetada
+      // Aquí va tu configuración real de Firebase
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_AUTH_DOMAIN",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_BUCKET",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -107,40 +113,29 @@
     const card = document.getElementById('card');
     const nameDiv = document.getElementById('name');
     const estadoDiv = document.getElementById('estado');
-    const profileImg = document.getElementById('profile-img');
     const ubicacionDiv = document.getElementById('ubicacion');
+    const profileImg = document.getElementById('profile-img');
     const matchMessage = document.getElementById('matchMessage');
     const likeBtn = document.getElementById('likeBtn');
     const dislikeBtn = document.getElementById('dislikeBtn');
     const chatBox = document.getElementById('chatBox');
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
+    const sendChat = document.getElementById('sendChat');
 
     let profiles = [];
     let currentIndex = 0;
     let currentUserId = null;
-    let currentMatchId = null;
+    let currentProfile = null;
 
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('nameInput').value;
-      const image = document.getElementById('imageInput').value || 'https://randomuser.me/api/portraits/lego/1.jpg';
+      const image = document.getElementById('imageInput').value || 'https://via.placeholder.com/300';
       const estado = document.getElementById('estadoEmocional').value;
+      const ubicacion = document.getElementById('ubicacionInput').value;
 
-      // Intentar obtener ubicación automática
-      let ubicacion = 'Monterrey';
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {},
-          err => {},
-          { timeout: 5000 }
-        );
-      }
-
-      const userRef = await db.collection('users').add({
-        name, image, estado, ubicacion, likedBy: []
-      });
-
+      const userRef = await db.collection('users').add({ name, image, estado, ubicacion, likedBy: [] });
       currentUserId = userRef.id;
       alert('¡Registrado! Ahora puedes ver a otros.');
       registerForm.style.display = 'none';
@@ -150,8 +145,8 @@
     async function loadProfiles() {
       const snapshot = await db.collection('users').get();
       profiles = snapshot.docs
-        .filter(doc => doc.id !== currentUserId)
-        .map(doc => ({ id: doc.id, ...doc.data() }));
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(p => p.id !== currentUserId);
       currentIndex = 0;
       showProfile(currentIndex);
     }
@@ -162,31 +157,29 @@
         alert('No hay más perfiles por hoy.');
         return;
       }
-      const profile = profiles[index];
-      profileImg.src = profile.image;
-      nameDiv.textContent = profile.name;
-      estadoDiv.textContent = `Estado: ${profile.estado}`;
-      ubicacionDiv.textContent = `Ubicación: ${profile.ubicacion}`;
+      currentProfile = profiles[index];
+      profileImg.src = currentProfile.image;
+      nameDiv.textContent = currentProfile.name;
+      estadoDiv.textContent = `Estado: ${currentProfile.estado}`;
+      ubicacionDiv.textContent = `Ubicación: ${currentProfile.ubicacion}`;
       card.style.display = 'block';
       matchMessage.textContent = '';
+      chatBox.style.display = 'none';
     }
 
     likeBtn.addEventListener('click', async () => {
-      const profile = profiles[currentIndex];
-      const profileRef = db.collection('users').doc(profile.id);
-      await profileRef.update({
-        likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
-      });
-      const matchSnapshot = await profileRef.get();
-      const likedBy = matchSnapshot.data().likedBy || [];
-      if (likedBy.includes(currentUserId)) {
-        matchMessage.textContent = `¡Has hecho match con ${profile.name}!`;
-        currentMatchId = profile.id;
+      const likedUserRef = db.collection('users').doc(currentProfile.id);
+      await likedUserRef.update({ likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId) });
+
+      const likedUserDoc = await likedUserRef.get();
+      const likedByArray = likedUserDoc.data().likedBy || [];
+
+      if (likedByArray.includes(currentUserId)) {
+        matchMessage.textContent = `¡Has hecho match con ${currentProfile.name}!`;
         chatBox.style.display = 'block';
-        loadMessages();
       }
       currentIndex++;
-      showProfile(currentIndex);
+      setTimeout(() => showProfile(currentIndex), 1000);
     });
 
     dislikeBtn.addEventListener('click', () => {
@@ -194,36 +187,14 @@
       showProfile(currentIndex);
     });
 
-    async function loadMessages() {
-      db.collection('chats')
-        .doc(currentUserId + '_' + currentMatchId)
-        .collection('messages')
-        .orderBy('timestamp')
-        .onSnapshot(snapshot => {
-          chatMessages.innerHTML = '';
-          snapshot.forEach(doc => {
-            const msg = doc.data();
-            const div = document.createElement('div');
-            div.textContent = `${msg.sender === currentUserId ? 'Tú' : 'Ell@'}: ${msg.text}`;
-            chatMessages.appendChild(div);
-          });
-        });
-    }
-
-    async function sendMessage() {
-      const text = chatInput.value;
-      if (!text.trim()) return;
-      const chatId = currentUserId + '_' + currentMatchId;
-      await db.collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .add({
-          sender: currentUserId,
-          text,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      chatInput.value = '';
-    }
-  </script>
-</body>
-  </html>
+    sendChat.addEventListener('click', () => {
+      const msg = chatInput.value.trim();
+      if (msg) {
+        const p = document.createElement('p');
+        p.textContent = `Tú: ${msg}`;
+        chatMessages.appendChild(p);
+        chatInput.value = '';
+      }
+    });
+  </script></body>
+</html>
