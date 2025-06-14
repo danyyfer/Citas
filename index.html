@@ -1,7 +1,8 @@
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>App de Citas Emocionales</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
@@ -58,7 +59,7 @@
   <h1>App de Citas Emocionales</h1>
   <form id="registerForm">
     <input type="text" id="nameInput" placeholder="Tu nombre" required />
-    <input type="url" id="imageInput" placeholder="URL de tu foto" required />
+    <input type="url" id="imageInput" placeholder="URL de tu foto (opcional)" />
     <select id="estadoEmocional" required>
       <option value="">¿Cómo te sientes hoy?</option>
       <option value="ansiedad">Ansiedad</option>
@@ -68,7 +69,9 @@
       <option value="duelo">En duelo</option>
     </select>
     <button type="submit">Registrar</button>
-  </form>  <div id="card" style="display:none">
+  </form>
+
+  <div id="card" style="display:none">
     <img id="profile-img" src="" alt="Perfil" />
     <div id="name"></div>
     <div id="estado"></div>
@@ -77,67 +80,73 @@
       <button id="likeBtn">Me Gusta</button>
     </div>
     <div id="matchMessage"></div>
-  </div><script>
-  const db = firebase.firestore();
+  </div>
 
-  const registerForm = document.getElementById('registerForm');
-  const card = document.getElementById('card');
-  const nameDiv = document.getElementById('name');
-  const estadoDiv = document.getElementById('estado');
-  const profileImg = document.getElementById('profile-img');
-  const matchMessage = document.getElementById('matchMessage');
-  const likeBtn = document.getElementById('likeBtn');
-  const dislikeBtn = document.getElementById('dislikeBtn');
+  <script>
+    const db = firebase.firestore();
 
-  let profiles = [];
-  let currentIndex = 0;
+    const registerForm = document.getElementById('registerForm');
+    const card = document.getElementById('card');
+    const nameDiv = document.getElementById('name');
+    const estadoDiv = document.getElementById('estado');
+    const profileImg = document.getElementById('profile-img');
+    const matchMessage = document.getElementById('matchMessage');
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
 
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('nameInput').value;
-    const image = document.getElementById('imageInput').value;
-    const estado = document.getElementById('estadoEmocional').value;
+    let profiles = [];
+    let currentIndex = 0;
 
-    await db.collection('users').add({ name, image, estado, likedBy: [] });
-    alert('¡Registrado! Ahora puedes ver a otros.');
-    registerForm.style.display = 'none';
-    loadProfiles();
-  });
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('nameInput').value;
+      let image = document.getElementById('imageInput').value;
+      const estado = document.getElementById('estadoEmocional').value;
 
-  async function loadProfiles() {
-    const snapshot = await db.collection('users').get();
-    profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    currentIndex = 0;
-    showProfile(currentIndex);
-  }
+      if (!image) {
+        image = "https://randomuser.me/api/portraits/lego/1.jpg"; // imagen por defecto
+      }
 
-  function showProfile(index) {
-    if (index >= profiles.length) {
-      card.style.display = 'none';
-      alert('No hay más perfiles por hoy.');
-      return;
+      await db.collection('users').add({ name, image, estado, likedBy: [] });
+      alert('¡Registrado! Ahora puedes ver a otros.');
+      registerForm.style.display = 'none';
+      loadProfiles();
+    });
+
+    async function loadProfiles() {
+      const snapshot = await db.collection('users').get();
+      profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      currentIndex = 0;
+      showProfile(currentIndex);
     }
-    const profile = profiles[index];
-    profileImg.src = profile.image;
-    nameDiv.textContent = profile.name;
-    estadoDiv.textContent = `Estado: ${profile.estado}`;
-    card.style.display = 'block';
-    matchMessage.textContent = '';
-  }
 
-  likeBtn.addEventListener('click', () => {
-    const profile = profiles[currentIndex];
-    // Simular match con 50% de probabilidad
-    if (Math.random() < 0.5) {
-      matchMessage.textContent = `¡Has hecho match con ${profile.name}!`;
+    function showProfile(index) {
+      if (index >= profiles.length) {
+        card.style.display = 'none';
+        alert('No hay más perfiles por hoy.');
+        return;
+      }
+      const profile = profiles[index];
+      profileImg.src = profile.image;
+      nameDiv.textContent = profile.name;
+      estadoDiv.textContent = `Estado: ${profile.estado}`;
+      card.style.display = 'block';
+      matchMessage.textContent = '';
     }
-    currentIndex++;
-    showProfile(currentIndex);
-  });
 
-  dislikeBtn.addEventListener('click', () => {
-    currentIndex++;
-    showProfile(currentIndex);
-  });
-</script></body>
+    likeBtn.addEventListener('click', () => {
+      const profile = profiles[currentIndex];
+      if (Math.random() < 0.5) {
+        matchMessage.textContent = `¡Has hecho match con ${profile.name}!`;
+      }
+      currentIndex++;
+      showProfile(currentIndex);
+    });
+
+    dislikeBtn.addEventListener('click', () => {
+      currentIndex++;
+      showProfile(currentIndex);
+    });
+  </script>
+</body>
 </html>
