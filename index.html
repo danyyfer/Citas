@@ -1,173 +1,154 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App de Citas Empática</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App de Citas Emocionales</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #eef2f7;
+      background: #f0f4f8;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: start;
       height: 100vh;
       margin: 0;
-      padding-top: 20px;
+      padding: 20px;
     }
     h1 {
       margin-bottom: 10px;
     }
-    #card {
-      width: 320px;
+    form, #card {
+      width: 100%;
+      max-width: 300px;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-bottom: 20px;
-      transition: all 0.3s ease;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
     #profile-img {
       width: 100%;
-      height: 280px;
+      height: 200px;
       object-fit: cover;
-    }
-    #name {
-      font-size: 1.4em;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    #emotion, #lookingFor {
-      margin: 5px 20px;
-      font-size: 1em;
-      text-align: center;
-      color: #444;
+      border-radius: 10px;
     }
     #actions {
       display: flex;
-      justify-content: space-around;
-      width: 100%;
-      margin-top: 15px;
+      justify-content: space-between;
+      margin-top: 10px;
     }
-    button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 50px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    #connectBtn {
-      background-color: #4CAF50;
-      color: white;
-    }
-    #respectBtn {
-      background-color: #f44336;
-      color: white;
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 1.1em;
-      color: #333;
+    #matchMessage {
+      margin-top: 10px;
+      color: green;
     }
   </style>
 </head>
 <body>
-
-  <h1>Conecta con Empatía</h1>
-  <div id="card">
+  <h1>App de Citas Emocionales</h1>
+  <form id="registerForm">
+    <input type="text" id="nameInput" placeholder="Tu nombre" required />
+    <input type="url" id="imageInput" placeholder="URL de tu foto" required />
+    <select id="estadoEmocional" required>
+      <option value="">¿Cómo te sientes hoy?</option>
+      <option value="ansiedad">Ansiedad</option>
+      <option value="depresión">Depresión</option>
+      <option value="bipolaridad">Bipolaridad</option>
+      <option value="autismo">Autismo</option>
+      <option value="duelo">En duelo</option>
+    </select>
+    <button type="submit">Registrar</button>
+  </form>  <div id="card" style="display:none">
     <img id="profile-img" src="" alt="Perfil" />
     <div id="name"></div>
-    <div id="emotion"></div>
-    <div id="lookingFor"></div>
-  </div>
-  <div id="actions">
-    <button id="respectBtn">Respetar su espacio</button>
-    <button id="connectBtn">Conectar con cuidado</button>
-  </div>
-  <div id="message"></div>
+    <div id="estado"></div>
+    <div id="actions">
+      <button id="dislikeBtn">No Me Gusta</button>
+      <button id="likeBtn">Me Gusta</button>
+    </div>
+    <div id="matchMessage"></div>
+  </div><script>
+  // Configura tu Firebase (REEMPLAZA ESTOS DATOS CON LOS TUYOS)
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_BUCKET",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
 
-  <script>
-    const profiles = [
-      {
-        name: "Ana",
-        image: "https://randomuser.me/api/portraits/women/44.jpg",
-        emotion: "Se siente con ansiedad, busca una charla suave.",
-        lookingFor: "Conexión emocional sin presión.",
-      },
-      {
-        name: "Carlos",
-        image: "https://randomuser.me/api/portraits/men/52.jpg",
-        emotion: "Está atravesando un duelo, prefiere alguien que escuche.",
-        lookingFor: "Comprensión y compañía.",
-      },
-      {
-        name: "Lucía",
-        image: "https://randomuser.me/api/portraits/women/68.jpg",
-        emotion: "Tiene autismo, busca conexiones honestas y claras.",
-        lookingFor: "Respeto, estructura y sinceridad.",
-      },
-      {
-        name: "Javier",
-        image: "https://randomuser.me/api/portraits/men/34.jpg",
-        emotion: "Día difícil por depresión, pero desea hablar.",
-        lookingFor: "Apoyo suave y sin juicios.",
-      }
-    ];
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    let currentIndex = 0;
+  const registerForm = document.getElementById('registerForm');
+  const card = document.getElementById('card');
+  const nameDiv = document.getElementById('name');
+  const estadoDiv = document.getElementById('estado');
+  const profileImg = document.getElementById('profile-img');
+  const matchMessage = document.getElementById('matchMessage');
+  const likeBtn = document.getElementById('likeBtn');
+  const dislikeBtn = document.getElementById('dislikeBtn');
 
-    const profileImg = document.getElementById('profile-img');
-    const nameDiv = document.getElementById('name');
-    const emotionDiv = document.getElementById('emotion');
-    const lookingForDiv = document.getElementById('lookingFor');
-    const messageDiv = document.getElementById('message');
-    const connectBtn = document.getElementById('connectBtn');
-    const respectBtn = document.getElementById('respectBtn');
+  let profiles = [];
+  let currentIndex = 0;
 
-    function showProfile(index) {
-      if (index >= profiles.length) {
-        profileImg.src = "";
-        nameDiv.innerText = "No hay más perfiles.";
-        emotionDiv.innerText = "";
-        lookingForDiv.innerText = "";
-        document.getElementById('actions').style.display = 'none';
-        return;
-      }
-      const profile = profiles[index];
-      profileImg.src = profile.image;
-      nameDiv.innerText = profile.name;
-      emotionDiv.innerText = profile.emotion;
-      lookingForDiv.innerText = profile.lookingFor;
-      messageDiv.innerText = "";
-    }
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('nameInput').value;
+    const image = document.getElementById('imageInput').value;
+    const estado = document.getElementById('estadoEmocional').value;
 
-    function handleConnect() {
-      const profile = profiles[currentIndex];
-      messageDiv.innerText = `Has elegido conectar con ${profile.name} con cuidado ❤️`;
-      nextProfile();
-    }
+    await db.collection('users').add({ name, image, estado, likedBy: [] });
+    alert('¡Registrado! Ahora puedes ver a otros.');
+    registerForm.style.display = 'none';
+    loadProfiles();
+  });
 
-    function handleRespect() {
-      const profile = profiles[currentIndex];
-      messageDiv.innerText = `Has respetado el espacio de ${profile.name}.`;
-      nextProfile();
-    }
-
-    function nextProfile() {
-      setTimeout(() => {
-        currentIndex++;
-        showProfile(currentIndex);
-      }, 1500);
-    }
-
-    connectBtn.addEventListener('click', handleConnect);
-    respectBtn.addEventListener('click', handleRespect);
-
+  async function loadProfiles() {
+    const snapshot = await db.collection('users').get();
+    profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    currentIndex = 0;
     showProfile(currentIndex);
-  </script>
-</body>
+  }
+
+  function showProfile(index) {
+    if (index >= profiles.length) {
+      card.style.display = 'none';
+      alert('No hay más perfiles por hoy.');
+      return;
+    }
+    const profile = profiles[index];
+    profileImg.src = profile.image;
+    nameDiv.textContent = profile.name;
+    estadoDiv.textContent = `Estado: ${profile.estado}`;
+    card.style.display = 'block';
+    matchMessage.textContent = '';
+  }
+
+  likeBtn.addEventListener('click', () => {
+    const profile = profiles[currentIndex];
+    // Simular match con 50% de probabilidad
+    if (Math.random() < 0.5) {
+      matchMessage.textContent = `¡Has hecho match con ${profile.name}!`;
+    }
+    currentIndex++;
+    showProfile(currentIndex);
+  });
+
+  dislikeBtn.addEventListener('click', () => {
+    currentIndex++;
+    showProfile(currentIndex);
+  });
+</script></body>
 </html>
