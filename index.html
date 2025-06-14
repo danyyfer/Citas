@@ -2,197 +2,244 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>App de Citas Emocionales</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #fce4ec);
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: start;
+      height: 100vh;
+      margin: 0;
       padding: 20px;
     }
     h1 {
-      color: #6a1b9a;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
-    form, #card {
+    form,
+    #card {
       width: 100%;
-      max-width: 400px;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      margin-top: 15px;
-      transition: all 0.3s ease-in-out;
+      max-width: 300px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      margin-top: 10px;
     }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      font-size: 1em;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
+    input,
+    select,
     button {
-      background-color: #6c63ff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #4a47a3;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
     #profile-img {
       width: 100%;
-      height: 260px;
+      height: 200px;
       object-fit: cover;
-      border-radius: 15px;
-      margin-bottom: 10px;
+      border-radius: 10px;
     }
     #actions {
       display: flex;
       justify-content: space-between;
-      gap: 15px;
-      margin-top: 15px;
-    }
-    #likeBtn, #dislikeBtn {
-      flex: 1;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 1em;
-      border: none;
-      border-radius: 8px;
-    }
-    #likeBtn {
-      background-color: #4cd137;
-      color: white;
-    }
-    #dislikeBtn {
-      background-color: #ff6b6b;
-      color: white;
+      margin-top: 10px;
     }
     #matchMessage {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #388e3c;
-      text-align: center;
+      margin-top: 10px;
+      color: green;
+    }
+    #chatBox {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      display: none;
+    }
+    #chatMessages {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
+  <h1>App de Citas Emocionales</h1>
+  <form id="registerForm">
+    <input type="text" id="nameInput" placeholder="Tu nombre" required />
+    <input type="url" id="imageInput" placeholder="URL de tu foto (opcional)" />
+    <select id="estadoEmocional" required>
+      <option value="">¿Cómo te sientes hoy?</option>
+      <option value="ansiedad">Ansiedad</option>
+      <option value="depresión">Depresión</option>
+      <option value="bipolaridad">Bipolaridad</option>
+      <option value="autismo">Autismo</option>
+      <option value="duelo">En duelo</option>
+    </select>
+    <input type="text" id="ubicacionInput" placeholder="Tu ciudad (ej. Monterrey)" required />
+    <button type="submit">Registrar</button>
+  </form>
 
-<h1>App de Citas Emocionales</h1>
-
-<form id="registerForm">
-  <input type="text" id="nameInput" placeholder="Tu nombre" required />
-  <input type="url" id="imageInput" placeholder="URL de tu foto" required />
-  <input type="text" id="ubicacionInput" placeholder="Ubicación (opcional)" />
-  <select id="estadoEmocional" required>
-    <option value="">¿Cómo te sientes hoy?</option>
-    <option value="ansiedad">Ansiedad</option>
-    <option value="depresión">Depresión</option>
-    <option value="bipolaridad">Bipolaridad</option>
-    <option value="autismo">Autismo</option>
-    <option value="duelo">En duelo</option>
-  </select>
-  <button type="submit">Registrar</button>
-</form>
-
-<div id="card" style="display:none">
-  <img id="profile-img" src="" alt="Perfil" />
-  <div id="name"></div>
-  <div id="estado"></div>
-  <div id="ubicacion"></div>
-  <div id="actions">
-    <button id="dislikeBtn">No me gusta</button>
-    <button id="likeBtn">Me gusta</button>
+  <div id="card" style="display:none">
+    <img id="profile-img" src="" alt="Perfil" />
+    <div id="name"></div>
+    <div id="estado"></div>
+    <div id="ubicacion"></div>
+    <div id="actions">
+      <button id="dislikeBtn">No Me Gusta</button>
+      <button id="likeBtn">Me Gusta</button>
+    </div>
+    <div id="matchMessage"></div>
+    <div id="chatBox">
+      <div id="chatMessages"></div>
+      <input type="text" id="chatInput" placeholder="Escribe un mensaje..." />
+      <button id="sendChat">Enviar</button>
+    </div>
   </div>
-  <div id="matchMessage"></div>
-</div>
 
-<script>
-  // Configuración original de tu Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyD9hya3i0mBtGHZbaE0Pg8z6OfO4ETgb1Q",
-    authDomain: "salud-mental-app.firebaseapp.com",
-    projectId: "salud-mental-app",
-    storageBucket: "salud-mental-app.appspot.com",
-    messagingSenderId: "1007927432160",
-    appId: "1:1007927432160:web:19271ae26f7a8c3644d9d3"
-  };
+  <script>
+    // Configuración real de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAbG23yHTMTfkJM5WJEwB5iRz-4hUlJeVU",
+      authDomain: "cita-611d4.firebaseapp.com",
+      projectId: "cita-611d4",
+      storageBucket: "cita-611d4.firebasestorage.app",
+      messagingSenderId: "1066363757727",
+      appId: "1:1066363757727:web:fc1e268afc491c29756eaa"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  const registerForm = document.getElementById('registerForm');
-  const card = document.getElementById('card');
-  const nameDiv = document.getElementById('name');
-  const estadoDiv = document.getElementById('estado');
-  const ubicacionDiv = document.getElementById('ubicacion');
-  const profileImg = document.getElementById('profile-img');
-  const matchMessage = document.getElementById('matchMessage');
-  const likeBtn = document.getElementById('likeBtn');
-  const dislikeBtn = document.getElementById('dislikeBtn');
+    // Referencias DOM
+    const registerForm = document.getElementById("registerForm");
+    const card = document.getElementById("card");
+    const nameDiv = document.getElementById("name");
+    const estadoDiv = document.getElementById("estado");
+    const ubicacionDiv = document.getElementById("ubicacion");
+    const profileImg = document.getElementById("profile-img");
+    const matchMessage = document.getElementById("matchMessage");
+    const likeBtn = document.getElementById("likeBtn");
+    const dislikeBtn = document.getElementById("dislikeBtn");
+    const chatBox = document.getElementById("chatBox");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const sendChat = document.getElementById("sendChat");
 
-  let profiles = [];
-  let currentIndex = 0;
+    let profiles = [];
+    let currentIndex = 0;
+    let currentUserId = null;
+    let currentProfile = null;
 
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('nameInput').value;
-    const image = document.getElementById('imageInput').value;
-    const estado = document.getElementById('estadoEmocional').value;
-    const ubicacion = document.getElementById('ubicacionInput').value;
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    await db.collection('users').add({
-      name, image, estado, ubicacion, likedBy: []
+      const name = document.getElementById("nameInput").value.trim();
+      const image = document.getElementById("imageInput").value.trim() || "https://via.placeholder.com/300";
+      const estado = document.getElementById("estadoEmocional").value;
+      const ubicacion = document.getElementById("ubicacionInput").value.trim();
+
+      if (!name || !estado || !ubicacion) {
+        alert("Por favor completa todos los campos requeridos.");
+        return;
+      }
+
+      try {
+        const userRef = await db.collection("users").add({
+          name,
+          image,
+          estado,
+          ubicacion,
+          likedBy: []
+        });
+        currentUserId = userRef.id;
+        alert("¡Registrado! Ahora puedes ver a otros perfiles.");
+        registerForm.style.display = "none";
+        await loadProfiles();
+      } catch (error) {
+        console.error("Error al registrar usuario:", error);
+        alert("Hubo un error al registrar, intenta de nuevo.");
+      }
     });
 
-    alert('¡Registrado! Ahora puedes ver a otros perfiles.');
-    registerForm.style.display = 'none';
-    loadProfiles();
-  });
-
-  async function loadProfiles() {
-    const snapshot = await db.collection('users').get();
-    profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    currentIndex = 0;
-    showProfile(currentIndex);
-  }
-
-  function showProfile(index) {
-    if (index >= profiles.length) {
-      card.style.display = 'none';
-      alert('No hay más perfiles por ahora.');
-      return;
+    async function loadProfiles() {
+      try {
+        const snapshot = await db.collection("users").get();
+        profiles = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((p) => p.id !== currentUserId);
+        currentIndex = 0;
+        showProfile(currentIndex);
+      } catch (error) {
+        console.error("Error cargando perfiles:", error);
+      }
     }
-    const profile = profiles[index];
-    profileImg.src = profile.image;
-    nameDiv.textContent = `👤 ${profile.name}`;
-    estadoDiv.textContent = `🧠 Estado: ${profile.estado}`;
-    ubicacionDiv.textContent = profile.ubicacion ? `📍 Ubicación: ${profile.ubicacion}` : '';
-    card.style.display = 'block';
-    matchMessage.textContent = '';
-  }
 
-  likeBtn.addEventListener('click', () => {
-    const profile = profiles[currentIndex];
-    if (Math.random() < 0.5) {
-      matchMessage.textContent = `🤗 ¡Has hecho match con ${profile.name}! ¡Un abrazo virtual!`;
+    function showProfile(index) {
+      if (index >= profiles.length) {
+        card.style.display = "none";
+        alert("No hay más perfiles por hoy.");
+        return;
+      }
+      currentProfile = profiles[index];
+      profileImg.src = currentProfile.image;
+      nameDiv.textContent = currentProfile.name;
+      estadoDiv.textContent = `Estado: ${currentProfile.estado}`;
+      ubicacionDiv.textContent = `Ubicación: ${currentProfile.ubicacion}`;
+      card.style.display = "block";
+      matchMessage.textContent = "";
+      chatBox.style.display = "none";
+      chatMessages.innerHTML = "";
     }
-    currentIndex++;
-    showProfile(currentIndex);
-  });
 
-  dislikeBtn.addEventListener('click', () => {
-    currentIndex++;
-    showProfile(currentIndex);
-  });
-</script>
+    likeBtn.addEventListener("click", async () => {
+      if (!currentProfile) return;
 
+      try {
+        const likedUserRef = db.collection("users").doc(currentProfile.id);
+        // Añadir currentUserId al likedBy del perfil actual
+        await likedUserRef.update({
+          likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+        });
+
+        // Revisar si el perfil actual también nos ha dado like (match)
+        const likedUserDoc = await likedUserRef.get();
+        const likedByArray = likedUserDoc.data().likedBy || [];
+
+        if (likedByArray.includes(currentUserId)) {
+          matchMessage.textContent = `¡Has hecho match con ${currentProfile.name}!`;
+          chatBox.style.display = "block";
+        }
+      } catch (error) {
+        console.error("Error al dar like:", error);
+      }
+
+      currentIndex++;
+      setTimeout(() => showProfile(currentIndex), 1000);
+    });
+
+    dislikeBtn.addEventListener("click", () => {
+      currentIndex++;
+      showProfile(currentIndex);
+    });
+
+    sendChat.addEventListener("click", () => {
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+
+      const p = document.createElement("p");
+      p.textContent = `Tú: ${msg}`;
+      chatMessages.appendChild(p);
+      chatInput.value = "";
+    });
+  </script>
 </body>
 </html>
